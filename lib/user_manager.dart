@@ -12,6 +12,9 @@ class UserManager {
   
   // VPN Remaining Time (Seconds)
   final ValueNotifier<int> remainingSeconds = ValueNotifier(0);
+
+  // Split Tunneling Mode: 0 = Disable, 1 = Uses VPN, 2 = Bypass VPN
+  final ValueNotifier<int> splitTunnelingMode = ValueNotifier(0);
   
   Timer? _timer;
   VoidCallback? onTimeExpired; // Callback to disconnect VPN
@@ -20,6 +23,11 @@ class UserManager {
   void watchAdReward() {
     balanceMMK.value += 30; // Earn 30 MMK
     remainingSeconds.value += 7200; // Add 2 Hours (7200 seconds)
+  }
+
+  // Add balance only (for earn money screen)
+  void addBalance(int amount) {
+    balanceMMK.value += amount;
   }
 
   // Start Countdown

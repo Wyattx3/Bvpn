@@ -4,6 +4,11 @@ import 'package:flutter/services.dart';
 import '../theme_notifier.dart';
 import 'split_tunneling_screen.dart';
 import 'vpn_protocol_screen.dart';
+import 'language_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_of_service_screen.dart';
+import 'contact_us_screen.dart';
+import 'about_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -21,6 +26,286 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature feature is coming soon!'), duration: const Duration(seconds: 1)),
     );
+  }
+
+  void _showShareDialog() {
+    const String shareText = 'Check out VPN App - Secure, Fast & Private VPN!\n\nDownload now: https://play.google.com/store/apps/details?id=com.vpnapp';
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Share VPN App',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildShareOption(
+                      icon: Icons.copy,
+                      label: 'Copy Link',
+                      color: Colors.blue,
+                      onTap: () {
+                        Clipboard.setData(const ClipboardData(text: shareText));
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Link copied to clipboard!')),
+                        );
+                      },
+                    ),
+                    _buildShareOption(
+                      icon: Icons.message,
+                      label: 'Message',
+                      color: Colors.green,
+                      onTap: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Opening Messages...')),
+                        );
+                      },
+                    ),
+                    _buildShareOption(
+                      icon: Icons.email,
+                      label: 'Email',
+                      color: Colors.red,
+                      onTap: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Opening Email...')),
+                        );
+                      },
+                    ),
+                    _buildShareOption(
+                      icon: Icons.more_horiz,
+                      label: 'More',
+                      color: Colors.orange,
+                      onTap: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Opening share options...')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    shareText,
+                    style: TextStyle(
+                      color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShareOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUploadLogDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.upload_file, color: Colors.deepPurple),
+              SizedBox(width: 12),
+              Text('Upload Debug Log'),
+            ],
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'This will upload your debug logs to our server for troubleshooting purposes.',
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'The log file contains:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: 8),
+              Text('• Connection timestamps'),
+              Text('• Error messages'),
+              Text('• App performance data'),
+              Text('• Device information'),
+              SizedBox(height: 16),
+              Text(
+                'No personal browsing data is included.',
+                style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _uploadLog();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Upload'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _uploadLog() {
+    // Show uploading progress
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: Colors.deepPurple),
+              const SizedBox(height: 20),
+              const Text('Uploading log file...'),
+              const SizedBox(height: 8),
+              Text(
+                'Please wait',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    // Simulate upload delay
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context); // Close progress dialog
+      
+      // Show success dialog
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 28),
+                SizedBox(width: 12),
+                Text('Upload Successful'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Your debug log has been uploaded successfully.'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.tag, size: 16, color: Colors.deepPurple),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Reference ID: ',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        'LOG-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Please save this ID if you contact support.',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Done'),
+              ),
+            ],
+          );
+        },
+      );
+    });
   }
 
   @override
@@ -163,7 +448,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                    child: Align(
                      alignment: Alignment.centerRight,
                      child: TextButton.icon(
-                       onPressed: () => _showNotImplemented('Upload Log'), 
+                       onPressed: () => _showUploadLogDialog(), 
                        icon: const Icon(Icons.upload_file, size: 16),
                        label: const Text('Upload Log'),
                      ),
@@ -183,7 +468,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                   ],
                 ),
-                onTap: () => _showNotImplemented('Language Selection'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LanguageScreen()),
+                  );
+                },
               ),
               _buildSettingItem(
                 icon: Icons.notifications_none,
@@ -229,19 +519,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.privacy_tip_outlined,
                 title: 'Privacy Policy',
                 trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                onTap: () => _showNotImplemented('Privacy Policy'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+                  );
+                },
               ),
               _buildSettingItem(
                 icon: Icons.description_outlined,
                 title: 'Terms of Service',
                 trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                onTap: () => _showNotImplemented('Terms of Service'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TermsOfServiceScreen()),
+                  );
+                },
               ),
               _buildSettingItem(
                 icon: Icons.mail_outline,
                 title: 'Contact Us',
                 trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                onTap: () => _showNotImplemented('Contact Support'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ContactUsScreen()),
+                  );
+                },
               ),
 
               const SizedBox(height: 20),
@@ -250,10 +555,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.share_outlined,
                 title: 'Share',
                 trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                onTap: () => _showNotImplemented('Share'),
+                onTap: () {
+                  _showShareDialog();
+                },
               ),
               InkWell(
-                onTap: () => _showNotImplemented('Version Info'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AboutScreen()),
+                  );
+                },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Row(

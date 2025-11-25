@@ -15,13 +15,33 @@ class _RewardsScreenState extends State<RewardsScreen> {
   bool isMMK = true;
   String? selectedPaymentMethod; // "Kpay", "Wave"
   final TextEditingController _accountNameController = TextEditingController();
-  final TextEditingController _accountNumberController = TextEditingController();
+  final TextEditingController _accountNumberController = TextEditingController(text: '09');
   final UserManager _userManager = UserManager();
+
+  String _formatNumber(int number) {
+    String numStr = number.toString();
+    String result = '';
+    int count = 0;
+    for (int i = numStr.length - 1; i >= 0; i--) {
+      count++;
+      result = numStr[i] + result;
+      if (count % 3 == 0 && i != 0) {
+        result = ',$result';
+      }
+    }
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.deepPurple, // Full screen background
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // White icons for dark background
+        statusBarBrightness: Brightness.dark, // iOS
+      ),
+      child: Scaffold(
+      backgroundColor: const Color(0xFF9575CD), // Soft purple (lighter)
       resizeToAvoidBottomInset: true, // Handle keyboard overlay
       appBar: AppBar(
         title: const Text('My Rewards', style: TextStyle(color: Colors.white)),
@@ -46,6 +66,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
         valueListenable: _userManager.balanceMMK,
         builder: (context, balance, child) {
           double usdValue = balance / 4500;
+          final formattedBalance = _formatNumber(balance);
 
           return Column(
             children: [
@@ -60,7 +81,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      isMMK ? '$balance MMK' : '\$${usdValue.toStringAsFixed(2)} USD',
+                      isMMK ? '$formattedBalance MMK' : '\$${usdValue.toStringAsFixed(2)} USD',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 40,
@@ -179,6 +200,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
           );
         },
       ),
+      ),
     );
   }
 
@@ -186,10 +208,17 @@ class _RewardsScreenState extends State<RewardsScreen> {
     final bool isSelected = isMMK == isForMMK;
     return GestureDetector(
       onTap: () {
+        if (isMMK != isForMMK) {
         setState(() {
           isMMK = isForMMK;
           selectedPaymentMethod = null; // Reset selection
+            if (isMMK) {
+              _accountNumberController.text = '09';
+            } else {
+              _accountNumberController.clear();
+            }
         });
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -259,10 +288,12 @@ class _RewardsScreenState extends State<RewardsScreen> {
 
     if (isMMK) {
       if (balance >= 20000) {
+        _showConfirmationDialog(() {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const WithdrawSuccessScreen()),
         );
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Insufficient balance. Min 20,000 MMK')),
@@ -270,15 +301,92 @@ class _RewardsScreenState extends State<RewardsScreen> {
       }
     } else {
       if (usdValue >= 20.0) {
+        _showConfirmationDialog(() {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const WithdrawSuccessScreen()),
         );
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Insufficient balance. Min \$20 USD')),
         );
       }
     }
+  }
+
+  void _showConfirmationDialog(VoidCallback onConfirm) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Text(
+                  'Confirm Information',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildDetailRow('Payment Method', isMMK ? selectedPaymentMethod! : 'PayPal'),
+              _buildDetailRow('Account Name', _accountNameController.text),
+              _buildDetailRow(isMMK ? 'Phone Number' : 'Email', _accountNumberController.text),
+              const SizedBox(height: 30),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Close dialog
+                        onConfirm();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Confirm'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+        ],
+      ),
+    );
   }
 }
