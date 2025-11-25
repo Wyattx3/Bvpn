@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../user_manager.dart';
 import '../theme_notifier.dart';
 import 'split_tunneling_screen.dart';
 import 'vpn_protocol_screen.dart';
@@ -18,7 +19,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool displayLatency = true;
+  final UserManager _userManager = UserManager();
   bool enableDebugLog = false;
   bool pushSetting = true;
   
@@ -425,11 +426,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSettingItem(
                 icon: Icons.speed,
                 title: 'Display Latency',
-                trailing: CupertinoSwitch(
-                  value: displayLatency,
-                  activeColor: Colors.deepPurple,
-                  trackColor: isDark ? Colors.grey.shade800 : null,
-                  onChanged: (v) => setState(() => displayLatency = v),
+                trailing: ValueListenableBuilder<bool>(
+                  valueListenable: _userManager.displayLatency,
+                  builder: (context, value, child) {
+                    return CupertinoSwitch(
+                      value: value,
+                      activeColor: Colors.deepPurple,
+                      trackColor: isDark ? Colors.grey.shade800 : null,
+                      onChanged: (v) => _userManager.displayLatency.value = v,
+                    );
+                  },
                 ),
               ),
               _buildSettingItem(

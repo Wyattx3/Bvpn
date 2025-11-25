@@ -15,6 +15,9 @@ class UserManager {
 
   // Split Tunneling Mode: 0 = Disable, 1 = Uses VPN, 2 = Bypass VPN
   final ValueNotifier<int> splitTunnelingMode = ValueNotifier(0);
+
+  // Display Latency Setting
+  final ValueNotifier<bool> displayLatency = ValueNotifier(true);
   
   Timer? _timer;
   VoidCallback? onTimeExpired; // Callback to disconnect VPN

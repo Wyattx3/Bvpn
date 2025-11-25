@@ -417,139 +417,185 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   // Bottom Section: Location Selector - Fixed height
-                  Container(
-                    height: 130, // Fixed height for location card
-                    margin: EdgeInsets.only(
-                      left: 20, 
-                      right: 20, 
-                      bottom: MediaQuery.of(context).padding.bottom + 20,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isConnected ? (isDark ? Colors.black26 : Colors.grey.shade100) : cardColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        if (!isConnected)
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _userManager.displayLatency,
+                    builder: (context, showLatency, child) {
+                      // Fixed height based on setting, not connection status
+                      final double cardHeight = showLatency ? 190 : 140;
+                      
+                      return Container(
+                        height: cardHeight,
+                        margin: EdgeInsets.only(
+                          left: 20, 
+                          right: 20, 
+                          bottom: MediaQuery.of(context).padding.bottom + 20,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Selected Location
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: isConnected ? null : () {
-                            _openLocationSelection();
-                          },
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isDark ? Colors.grey.withOpacity(0.1) : Colors.grey.shade100,
-                                ),
-                                child: Text(currentFlag, style: const TextStyle(fontSize: 18)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isConnected ? (isDark ? Colors.black26 : Colors.grey.shade100) : cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            if (!isConnected)
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            // Selected Location
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: isConnected ? null : () {
+                                _openLocationSelection();
+                              },
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isDark ? Colors.grey.withOpacity(0.1) : Colors.grey.shade100,
+                                    ),
+                                    child: Text(currentFlag, style: const TextStyle(fontSize: 18)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Selected Location',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: subTextColor,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          currentLocation,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: textColor,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(Icons.signal_cellular_alt, size: 18, color: isConnected ? Colors.green : Colors.grey),
+                                  const SizedBox(width: 8),
+                                  if (!isConnected)
+                                    Icon(Icons.arrow_forward_ios, size: 14, color: subTextColor),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                            
+                            const Spacer(),
+
+                            if (showLatency) ...[
+                              Divider(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300, height: 1),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Text(
+                                    isConnected ? 'IP 66.93.155.247' : 'IP -.-.-.-',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: textColor.withOpacity(0.7),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Icon(Icons.arrow_downward, size: 12, color: isConnected ? Colors.green : Colors.grey),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isConnected ? '1.0KB/s' : '0KB/s',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: textColor.withOpacity(0.7),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.arrow_upward, size: 12, color: isConnected ? Colors.purple : Colors.grey),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isConnected ? '86B/s' : '0B/s',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: textColor.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                            ] else ...[
+                              Divider(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200, height: 1),
+                              const Spacer(),
+                            ],
+                            
+                            // Recent Location - Always visible
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: isConnected ? null : () {
+                                setState(() {
+                                  currentLocation = 'JP - Tokyo';
+                                  currentFlag = '🇯🇵';
+                                });
+                              },
+                              child: Opacity(
+                                opacity: isConnected ? 0.5 : 1.0,
+                                child: Row(
                                   children: [
+                                    const Icon(Icons.history, size: 14, color: Colors.grey),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'Selected Location',
+                                      'Recent Location',
                                       style: TextStyle(
-                                        fontSize: 11,
                                         color: subTextColor,
+                                        fontSize: 12,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    const Spacer(),
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isDark ? Colors.grey.shade800 : Colors.white,
+                                        border: Border.all(color: Colors.grey.shade300, width: 0.5),
+                                      ),
+                                      child: const Text('🇯🇵', style: TextStyle(fontSize: 12)),
+                                    ),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      currentLocation,
+                                      'JP - Tokyo',
                                       style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
                                         color: textColor,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
+                                    const SizedBox(width: 8),
+                                    Icon(Icons.signal_cellular_alt, size: 14, color: Colors.green.shade400),
+                                    if (!isConnected) ...[
+                                      const SizedBox(width: 4),
+                                      Icon(Icons.arrow_forward_ios, size: 12, color: subTextColor),
+                                    ],
                                   ],
                                 ),
                               ),
-                              Icon(Icons.signal_cellular_alt, size: 18, color: isConnected ? Colors.green : Colors.grey),
-                              const SizedBox(width: 8),
-                              if (!isConnected)
-                                Icon(Icons.arrow_forward_ios, size: 14, color: subTextColor),
-                            ],
-                          ),
-                        ),
-                        
-                        // Recent Location - Always visible for fixed height
-                        const SizedBox(height: 12),
-                        Divider(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200, height: 1),
-                        const SizedBox(height: 12),
-                        
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: isConnected ? null : () {
-                            setState(() {
-                              currentLocation = 'JP - Tokyo';
-                              currentFlag = '🇯🇵';
-                            });
-                          },
-                          child: Opacity(
-                            opacity: isConnected ? 0.5 : 1.0,
-                            child: Row(
-                              children: [
-                                const Icon(Icons.history, size: 14, color: Colors.grey),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Recent Location',
-                                  style: TextStyle(
-                                    color: subTextColor,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isDark ? Colors.grey.shade800 : Colors.white,
-                                    border: Border.all(color: Colors.grey.shade300, width: 0.5),
-                                  ),
-                                  child: const Text('🇯🇵', style: TextStyle(fontSize: 12)),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'JP - Tokyo',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(Icons.signal_cellular_alt, size: 14, color: Colors.green.shade400),
-                                if (!isConnected) ...[
-                                  const SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward_ios, size: 12, color: subTextColor),
-                                ],
-                              ],
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    }
                   ),
                 ],
               );
