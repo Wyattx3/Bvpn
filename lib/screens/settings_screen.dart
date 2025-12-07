@@ -30,11 +30,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // SDUI Config
   Map<String, dynamic> _config = {};
   bool _isLoading = true;
+  String _deviceId = 'Loading...';
 
   @override
   void initState() {
     super.initState();
+    _loadDeviceId();
     _loadServerConfig();
+  }
+
+  Future<void> _loadDeviceId() async {
+    final id = await _userManager.getDeviceId();
+    if (mounted) {
+      setState(() {
+        _deviceId = id;
+      });
+    }
   }
 
   Future<void> _loadServerConfig() async {
@@ -365,7 +376,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     }
 
-    final accountId = _config['account_id'] ?? '19a070***04eef7';
+    // final accountId = _config['account_id'] ?? '19a070***04eef7';
     final version = _config['version'] ?? 'V1.0.8 (latest)';
 
     return ValueListenableBuilder<ThemeMode>(
@@ -424,7 +435,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          accountId,
+                          _deviceId,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -434,7 +445,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       InkWell(
                         onTap: () {
-                          Clipboard.setData(ClipboardData(text: accountId));
+                          Clipboard.setData(ClipboardData(text: _deviceId));
                           showMessageDialog(
                             context,
                             message: 'ID copied to clipboard',

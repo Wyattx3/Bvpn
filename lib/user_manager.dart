@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserManager {
   static final UserManager _instance = UserManager._internal();
@@ -25,6 +27,23 @@ class UserManager {
   
   Timer? _timer;
   VoidCallback? onTimeExpired; // Callback to disconnect VPN
+
+  // Device ID Management
+  Future<String> getDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? deviceId = prefs.getString('device_id');
+    if (deviceId == null) {
+      deviceId = _generateDeviceId();
+      await prefs.setString('device_id', deviceId);
+    }
+    return deviceId;
+  }
+
+  String _generateDeviceId() {
+    final random = Random();
+    const chars = 'abcdef0123456789';
+    return List.generate(16, (index) => chars[random.nextInt(chars.length)]).join();
+  }
 
   // Add Reward & Time
   // Returns true if successful, false if limit reached
@@ -107,4 +126,3 @@ class UserManager {
   // Helper to convert to USD (1 Point = 1 MMK, 1 USD = 4500 MMK)
   double get balanceUSD => balancePoints.value / 4500; 
 }
-
